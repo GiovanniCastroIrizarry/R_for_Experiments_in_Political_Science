@@ -1,0 +1,236 @@
+---
+title: "R Bootcamp 2 - Data Manipulation with Tidyverse"
+author: |
+  | Giovanni Castro Irizarry
+  | UCLA M183/M136C
+date: "Spring 2025 Week 3"
+output:
+  pdf_document: default
+editor_options: 
+  chunk_output_type: console
+---
+
+-------------
+Review
+-------------
+
+## Variables
+
+### Practice Q1.
+
+Assign the variable `z` the difference between `y` and `x` with `y = 50` and `x = 20`.
+
+```{r}
+
+
+
+```
+
+## Data Frames
+
+### Practice Q2.
+
+What is the mean of the variable `mpg` in the `mtcars` dataset nested in the `car` package?
+
+```{r}
+
+
+
+```
+
+### Practice Q3.
+
+How many columns are in the `mtcars` dataframe?
+
+```{r}
+
+
+```
+
+-------------------------------
+Basic Data Manipulation in R
+-------------------------------
+
+For practice this week, we are going to use the data from a mini-experiment. I have copied the code that imports the data in the code chunk below. 
+  
+Please follow along if you'd like or work through this at your own pace.
+  
+I will note now that for our purposes in this class, most of our focus will be on unpacking and analyzing the statistical meaning of our analyses, not so much on a deep understanding of the computer science of what R does under the hood. We cannot neglect a basic understanding of how to code, since knowing how to write good code is essential to effectively using R as a tool for analysis. 
+  
+Lastly, oftentimes you will run into strange errors or anomalous outputs from your code. Don't panic! The best thing for you to do in these situations is to google the problem you're having. You will very often find that others have posted about your issue on coding sites like `stackexchange.com` and that the problem you are working on has been solved by someone else. Learning how to understand how code works is very important for taking other peoples' solutions and porting them to the problem you're working on. 
+  
+Feel free to grab code from any source you find applicable! But if you do, please indicate the source of your code in either a comment near where you apply the code or in text near the relevant code chunk. Failing to do this is plagiarism just as with taking ideas from academic texts.
+
+## Importing and displaying data
+
+Data we want to look at is in a csv file. `Tidyverse` package has `read.csv` command that allows you to download and read .csv files on R
+
+First, let's clean the Environment with the following code:
+```{r}
+rm(list=ls()) 
+```
+
+But honestly, it is easier to use the broom in Environment (top right quadrant)
+
+Let's load tidyverse package to use some of the commands we will need for today.
+```{r}
+library(tidyverse)
+```
+
+Now let's import some data. But to do so, you need to understand what is a working directory. Think of a directory as a folder on your computer. When you're using R, it always has a "current working directory" — basically the folder it's currently looking in by default when you load or save files.
+
+```{r}
+#Check working directory
+getwd()
+
+#How to set the working directory:
+#setwd("/Users/giovanni/Downloads") 
+```
+
+When working in RMarkdown, the working directory is always the folder where the .Rmd file is located
+
+```{r}
+#Import the data from dropbox and save it in an object called experiment
+experiment <- read_csv("mousa.csv")
+
+#read.csv reads csv files, readRDS() reads RDS files, read_sav()      
+
+# Show the mini experiment data
+print(experiment)
+```
+
+## Pipes and select()
+
+Before analyzing the data, we want to look at the treatment group and their outcome. The `select()` function in the `dplyr` package allows you to select and view the variables of interest from the dataset. It returns a subset of the columns of the dataset that are specified. 
+
+```{r}
+# Load dplyr package to use some of the commands we will need for today
+library(dplyr)
+```
+
+I first use the function to create a vector without using the pipe. Also, notice how I wrapped the column names inside the `c()` function.
+  
+```{r Not Using Pipes}
+# Select the treatment and a few of the variable columns
+dplyr::select(experiment, c("treated", "donate_t1_new1", "edu", "income", "voted_muslim_extra"))
+```
+
+We can do the same thing using the pipe operator `%>%`. It takes the object on the left-hand side and passes it as the first parameter (or argument) of the function on the right-hand side. 
+  
+```{r Using Pipes}
+# Select the same columns using a pipe %>%
+experiment %>% #from the dataset called `experiment`
+  dplyr::select(c("treated", "donate_t1_new1", "edu", "income", "voted_muslim_extra")) #view these variables
+```
+
+## Explanation of pipes
+Imagine you have this code:
+```{r}
+summary(log(sqrt(c(1, 4, 9, 16))))
+```
+
+This can be hard to read because you need to start from inside to outside. With a pipe you can write the same command in a different way, with the same results:
+```{r}
+c(1, 4, 9, 16) |> sqrt() |> log() |> summary()
+```
+
+## filter()
+
+Sometimes before analyzing data we want to remove observations that are problematic for our analysis. A systematic way to do this is with the `filter()` command. This function takes as its parameters 1) the dataset and 2) a logical operator dictating which rows of the dataset to RETAIN. 
+  
+One thing you might encounter is that missing observations can prevent you from finding statistical estimates on your dataset.
+  
+The simplest way to handle missing data is to simply delete observations with missing values of variables of interest - listwise deletion. Since the index is the dependent variable of interest with a missing value, let's remove the row with a missing value using `filter()`. I added some code that saves new resulting dataset as `experiment_clean` so that we can retain the cleaned up version for subsequent analyses.
+
+There are two ways to check if there are NA values in a dataset:
+  1) If you want to evaluate if a value is NA, you should use the `is.na()` function instead of standard logical operators. `is.na()` evaluates to TRUE anywhere the object inside the parentheses takes a value of NA.
+  2) The logical NOT operator `!` turns all TRUE values into FALSE and all FALSE values into TRUE.
+  
+```{r}
+# Create a sample dataset with NA values
+nums <- c(1, 2, NA, 5, 10, NA)
+
+# A quick demonstration of is.na()
+is.na(nums) #shows NA values as TRUE
+
+# A quick demonstration of !
+!is.na(nums) #shows NA values as FALSE
+```
+
+Check for NA's in the `voted_muslim_extra` variable
+```{r}
+is.na(experiment$voted_muslim_extra)
+```
+Use `summary()` command to know how many TRUE and FALSE are in the `voted_muslim_extra` variable
+```{r}
+summary(is.na(experiment$voted_muslim_extra))
+```
+
+Use the `filter()` command with a logical operation to remove rows with an NA value 
+
+```{r}
+experiment_clean <- filter(experiment, !is.na(voted_muslim_extra))
+```
+
+Or, you can do the same using pipes
+```{r}
+experiment_clean <- experiment %>% #create a new dataset `_clean` 
+  filter(!is.na(voted_muslim_extra)) #and get rid of any NAs
+```
+
+Check for NA's in the `voted_muslim_extra` variable in the new cleaned dataset
+```{r Filter}
+is.na(experiment_clean$voted_muslim_extra)
+```
+
+## mutate()
+
+In order to better process our data, we often need to transform it into a more appropriate form.
+  
+That's where `mutate()` comes in. It adds new columns (variables) to the dataset you're using. Most importantly, it can do so based on the values of other columns. 
+
+Lets make a new variable called "outcome"
+
+```{r}
+# Check the variables of interest
+experiment_clean$dv_secular_t0
+experiment_clean$dv_blame_t0
+experiment_clean$dv_neigh_t0
+
+dplyr::select(experiment_clean, c("dv_secular_t0", "dv_blame_t0", "dv_neigh_t0"))
+
+#Or with pipes
+experiment_clean %>% dplyr::select(c("dv_secular_t0", "dv_blame_t0", "dv_neigh_t0"))
+```
+
+Eyeballing it, it seems like the mean of the three numerical variables - `dv_secular_t0`, `dv_blame_t0`, and `dv_neigh_t0`. 
+
+Let's verify that with the `mutate()` command.
+  
+```{r Mutate}
+# Starting with the cleaned dataset from last time
+experiment_mutated <- experiment_clean %>% #create a new dataset `_mutated` from `_clean`
+  mutate(outcome = (dv_secular_t0 + dv_blame_t0 + dv_neigh_t0)/3) #and create a new variable
+```
+
+Or you can just add this new variable `outcome` to the `experiment_clean` dataset with `$`
+```{r}
+experiment_clean$outcome <- (experiment_clean$dv_secular_t0 + experiment_clean$dv_blame_t0 + experiment_clean$dv_neigh_t0) / 3
+```
+
+
+## summarise() and group_by()
+
+The `summarise()` function is a tool to apply certain functions to columns of data to reduce them to single values. And I used it just now to count up the number of TRUE values in the validation check above. In other words, you can produce simple summary statistics (mean of a column, the standard deviation) in this simple-to-use function.
+  
+`group_by()` is frequently used in conjunction with `summarise()`, since it restricts summary operations to within values of the grouping variable. This is useful if we want to think about differences between the treatment and control groups. Remember to put this function BEFORE the `summarise()` function - it won't work otherwise!
+  
+Let's try to calculate the means and standard deviations of the growth mindset index scores for each group! 
+  
+```{r Summarise and Group_By}
+experiment_mutated %>% #from the dataset called `experiment_mutated`
+  group_by(treated) %>% #want to look at the observations based on treatment and control groups 
+  summarise(mean = mean(outcome), #mean of the outcome
+            sd = sd(outcome)) #standard deviation of the outcome
+```
+  

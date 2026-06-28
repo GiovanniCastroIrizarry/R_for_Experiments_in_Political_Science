@@ -1,0 +1,386 @@
+---
+title: "R Bootcamp 1 - Introduction to R"
+author: |
+  | Giovanni Castro Irizarry
+  | UCLA M183/M136C
+date: "Spring 2025 Week 2"
+
+output:
+  pdf_document: default
+editor_options: 
+  chunk_output_type: console
+---
+
+# Housekeeping
+
+First of all, throughout any session, stop me to ask questions! If you don't get something, chances are most others don't get it either. Do not be shy. Interrupt me. I will miss things. Also, I encourage you to help each other. If you finish with a mini-assignment, turn to your neighbor and see if they need help or are stuck. Teaching helps you better understand, too.
+
+**Please note that time was not enough to cover all of this Bootcamp, so please take your time to review and understand the sections, commands, and concepts that we  did not review in section.**
+
+I borrowed and adapted a lot of the material in this course from Tyler Reny at Claremont Graduate University `http://tylerreny.github.io/` and previous TA's for this course.
+
+Before we get started, did everyone install R and RStudio?
+
+- If not, spend the next few minutes downloading them
+
+- Rstudio (https://www.rstudio.com/products/rstudio/download2/)
+
+- R (https://www.r-project.org/)
+
+# How do I navigate R Studio?
+
+## 4 quadrants
+
+1. Top Left - where you code (where you do your work)
+2. Top Right - Environment and other "useful" things (don't worry about this area)
+3. Bottom Right - Files and Plots generated here (where you look at the work you've done)
+4. Bottom Left - Console/Terminal (you can code in the console, but don't)
+
+## R Markdown
+
+- This is R Markdown
+- A file format that allows you to create documents that serve as a neat record of your analysis
+- File > New File > R Markdown > Create "Title" and "Author" > Choose "PDF" for "Default Output Format" 
+- You can change the 'title' at the very top
+- You can save the document
+- To learn more about R Markdown and formatting: 
+  - https://www.stat.cmu.edu/~cshalizi/rmarkdown/
+  - https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf
+
+## Running code
+
+- You run code that you have written.
+  - You can run your code by:
+    - Clicking "Run" in the top right of the Top Left quadrant
+    - Hitting "Ctrl + Enter" (on PC)
+    - Hitting "Command + Return" (on Mac)
+
+## Knit
+
+- You can "Knit" your code and turn it into a PDF
+- You need LaTex to knit into a PDF
+
+## R Projects
+
+- We'll talk about this more as we get closer to the Final Paper
+- This is great for keeping things organized and replicable
+
+## Code Chunks in R Markdown
+
+If you want to run R code (or python!) inside a markdown, use this formatting
+
+```{r}
+# this is a code chunk. Code is executed here. Functions done here are displayed in the knitted document.
+
+#Example
+2+2
+```
+
+
+# First Steps
+
+Text and code chunks: 
+
+```{r}
+# Text
+print("Hello world")
+
+# Code
+a <- 2 + 5
+a
+
+6*a
+```
+
+```{r, echo=FALSE}
+#But sometime we don't want to show code chunks in the knitted document
+#You can use ", echo=FALSE" after the r to avoid the chunk code to be displayed in the PDF, only the results
+#This is very useful, for example, when you include plots (having the code for it in the document is often unnecessary)
+
+plot(pressure)
+```
+
+# Some basics
+
+## Packages
+
+- There are thousands of R packages that help you do things you want to do. They are basically pre-written functions that execute complex (sometimes) series of code and calculations given some pre-determined number of inputs. 
+
+- We will DEFINITELY be using the following packages: `tidyverse`, `estimatr`, `cobalt`, and `stargazer`. Let's install these together now.
+
+```{r}
+# How do you install new packages?
+
+# Generally speaking, will do this in console below, not in R script
+# install.packages('tidyverse')
+# install.packages('stargazer')
+# install.packages('estimatr')
+# install.packages('cobalt')
+#install.packages('car')
+```
+
+```{r}
+# Please delete the above lines of code once you have already installed the packages
+
+# What is downloaded and available to be used?
+library()
+library(tidyverse)
+library(stargazer)
+library(estimatr)
+library(cobalt)
+```
+
+# Getting Help
+
+- If there is one skill that is most important to get good at quickly, it is learning where to look for help when you get stuck (you will... a lot).
+
+- One of the best things about R is that there is such a broad user base and very active (don't ask me why) online message boards with help. The trick is knowing how to find it by knowing what to search for.
+
+- Getting started: Using the `?` or `help()` The first place to start when you're using a package is getting used to looking at the help files. You can request the help file for any function in any package (help files are a requirement for publishing an R package)
+
+- ChatGPT can be helpful but sometimes makes mistakes or suggests incorrect codes
+
+```{r}
+help(sum)
+?sum
+```
+
+- The key things to look at here are: 
+  1) Usage: what inputs does the function need; 
+  2) Arguments, what are the format of these inputs in more details; 
+  3) Value: what will the function return; and 
+  4) Examples: I often jump straight to the examples
+
+- Getting help also means figuring out what is wrong when you get error messages. The best thing to do is to copy the message and search for it in google.
+
+# Basic Commands in R
+
+- R is an object based language
+- `<-` is an assignment operator. The single `=` is also an assignment operator for special uses that we will discuss later.
+  - On the left is the variable name of the object where I am storing things
+  - To the right is whatever I want to put into my object (You can never do the other way around!)
+
+## Math!
+
+You can use R as a calculator
+
+```{r Math}
+# Addition
+5 + 6
+
+# Subtraction
+9 - 3
+
+# Multiplication
+5*8 
+
+# Division
+6/10
+
+# Exponentiation
+5^2 
+
+# Square Roots
+sqrt(25) 
+
+# Etc etc etc
+```
+
+R can also evaluate logical queries:
+
+```{r Logical Queries}
+# True or False
+5 < 6
+
+6 < 5
+
+2 >= 0 #greater than or equal to
+
+10 == 10 #notice the two equal signs
+```
+
+## Variables
+
+Variables are the workhorse of R. They store whatever you give them.
+
+There are naming conventions for variables. Some people like to use snake case for variable names:
+
+```{r, eval=FALSE}
+some_use_snake_case
+
+other.people.use.periods #Not recommended
+
+othersUseCamelCase
+```
+
+Variable names cannot have spaces. This is entirely a matter of preference, but try to keep it consistent. 
+
+Google style guide uses the periods. Many who use other programming languages will strongly urge you to avoid using the period because there are certain functions in R that require the period `is.matrix()` and other languages, like Python and SQL rely on the period in important ways to define hierarchies in function and object calls. 
+
+If you want to use camelCase, Google style guide suggests using `CamelCase` with a capitalized first letter for functions, only, and `camelCase` with a lower case letter if you prefer, for variable names.
+
+ALWAYS make sure your variable name is descriptive of what it is representing. Do not name your variables vague terms (like `var`, which is what I sometimes still do). 
+
+Decide among your teammates which convention of variable naming you will be using. STAY CONSISTENT!
+
+Let's start by making a variable called `x`:
+
+```{r}
+# Assign the variable x the value 10
+x <- 10
+x #print
+```
+
+I will often try to avoid cluttering my scripts by having an entire line devoted to printing out the contents of an object as I have done above. I will often assign an object and then just highlight the x on that same line and print it to make sure it was assigned properly. 
+
+Please assign the variable `y` the value 15 and check if you did it correctly. 
+
+```{r}
+# Assign the variable y the value 15
+y <- 15
+y
+```
+
+We can do math with variables too. Look what happens now when you add x and y
+
+```{r}
+# Add x and y
+x + y
+```
+
+We can also create a new variable to store the added value.
+
+```{r}
+# Store the sum of x and y to a new variable z
+z <- x + y
+z #print
+```
+
+You can mix types
+
+```{r}
+# Create a character string 
+x <- 'This is a character string' 
+x
+```
+
+Notice that the character strings are in quotes (either single or double work, just be consistent).
+
+But be weary that you cannot do certain operations with mixed types
+
+```{r, eval=FALSE}
+x + y #cannot perform this operation
+```
+
+What kind of variable is x, now?
+
+```{r}
+# Find what class the variables are
+class(x) #character
+class(y) #numeric
+```
+
+So we have numeric and character strings, what else can we have?
+
+```{r}
+# Create a boolean variable (True/False)
+my_boolean_variable <- TRUE 
+```
+
+Note the lack of quotations. This is not a character string.
+
+```{r}
+# Check the class of the variable
+class(my_boolean_variable) #logical
+```
+
+So far all I have shown you is variables with one object in them:
+
+```{r}
+# Find out the number of objects inside a variable
+length(x) 
+```
+
+These are actually called scalars (1 item). But variables can hold many objects. These variables are called vectors.
+
+```{r}
+# Create a vector of numbers 1-6
+vector <- c(1, 2, 3, 4, 5, 6)
+vector #print
+
+class(vector) #check class
+length(vector) #check number of objects
+```
+
+Notice that `c()` is a function that `combines` or `concatenates` objects together. Note that all the objects in a vector need to be the same class. Tell me what happens when we combine character and numeric objects together:
+
+```{r}
+# Combine numeric and character objects together
+vector2 <- c(1, 2, 3, 'dog')
+vector2  #print
+
+class(vector2) #check class
+length(vector2) #check number of objects
+```
+
+We can change the class of the objects
+
+```{r}
+# Change `dog` to `NA`
+vector2[vector2 == 'dog'] <- NA
+vector2 #check if changed correctly
+
+class(vector2) #check class
+
+# Change character to numeric
+vector2 <- as.numeric(vector2)
+vector2 #notice the quotes are gone
+
+class(vector2) #check class
+```
+
+## Data Frames
+
+The last format we'll learn is the data frame. This is how you will work with data almost all of the time you are doing statistical analyses. Think again of the spreadsheet where you have rows (observations) and columns (variables). Dataframes are different than matrices because they can hold different types of data. One column can be numeric, another character, and another boolean. 
+
+```{r}
+# Load `car` package if you need to
+library(car)
+
+# `mtcars` is a dataset that is stored in the `car` package
+mtcars 
+
+# Create your own dataframe by reproducing `mtcars` dataset
+my_Data_Frame <- mtcars
+```
+
+There are some helper functions in R to help you look at a dataframe.
+
+```{r}
+# View the first 6 rows
+head(my_Data_Frame)
+
+# View the last 6 rows
+tail(my_Data_Frame)
+
+# Display the structure of each variable in the dataframe 
+str(my_Data_Frame) 
+
+# Summarizes each variable in the dataframe
+summary(my_Data_Frame) 
+```
+
+You can find the dimensions of Dataframe and the number of rows and columns as well!
+
+```{r}
+# Number of rows
+nrow(my_Data_Frame)
+
+# Number of columns 
+ncol(my_Data_Frame)
+
+# Dimensions
+dim(my_Data_Frame)
+```
+
+We will learn basic data manipulation next week! Let me know if you have any questions on what we have covered today!

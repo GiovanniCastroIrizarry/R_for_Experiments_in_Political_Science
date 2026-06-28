@@ -1,0 +1,348 @@
+---
+title: "R Bootcamp 3 - Data Visualization"
+author: |
+  | Giovanni Castro Irizarry
+  | UCLA M183/M136C
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+rm(list=ls()) #clearing the global environment
+
+knitr::opts_chunk$set(echo = TRUE) #code chunks will be evaluated unless stated otherwise
+library(plyr)
+library(dplyr)
+library(rlang)
+library(estimatr)
+library(stargazer)
+library(ggplot2)
+```
+
+## Acknowledgments
+
+Much of this lesson plan was adapted from Babraham Bioinformatics' *Introduction to `ggplot2`* manual online. A direct link to the article is provided: https://www.bioinformatics.babraham.ac.uk/training/ggplot_course/Introduction%20to%20ggplot.pdf
+
+# Introduction
+
+Today, we are going to focus on data visualization techniques. In research papers, most data visualization appears as graphs and/or tables. Graphs are typically preferred as they clearly demonstrate the point you are making with the data, and tables often are known as Big Ugly Tables of Numbers (BUTON) because they are far less inviting to the reader than a graph.
+
+## A quick intoduction to `ggplot`
+  
+### What is `ggplot`? How does it work?
+
+As such, I will focus primarily today on the `ggplot2` package because it is the best at creating beautiful graphs. The package `ggplot2` is automatically wrapped up in the `tidyverse` package, so we only need to load in the `tidyverse`.
+  
+`ggplot` is the package we are going to use to make graphical representations of our findings. This week, I am going to demonstrate some of the basics of how it works. 
+  
+`ggplot` is essentially and additive drawing tool for visualizations of data. By additive, I mean that each visual feature you add to the plot is done with a "+" operator: you are quite literally adding elements to the visual in order to build it. R knows how to process these visual elements through the graph's aesthetics property created using the aes() function. This function tells R things like what data belongs on what axis, what color to mark data points, what size to make data points, and other basics of how to translate a dataset into a visualization.
+  
+To create a graph in `ggplot2`, you must include several parameters in its construction: `aes()` and `geom()`. `aes()` is used to load in the data and specify the x- and y-axes. The `geom()` parameter helps us decide which style of graph `ggplot2` will construct.
+
+The following graphs can automatically be constructed with `geom()`:
+
+- `geom_bar()` The Bar Graph
+
+- `geom_point()` Scatterplot
+
+- `geom_line()` Add a line to the graph
+
+- `geom_smooth()` Add a line to the graph (typically a linear regression line)
+
+- `geom_histogram()` The histogram
+
+- `geom_boxplot()` The boxplot
+
+- `geom_hline()` or `geom_vline()` Add a horizontal or vertical line
+
+The general form of your code will look like the following:
+
+`mygraph <- ggplot(mydata, aes(variable for x axis, variable for y axis)) + geom_GRAPHTYPE()`
+
+# Scatterplot
+
+Let's actually start graphing! We are going to first graph a scatterplot with the `msleep` dataset (which is already loaded into `R`!)
+
+Let's look at the relationship between numbers of hours slept per day (`sleep_total`) and the weight of the animal (`bodywt`).
+
+```{r Scatterplot}
+scatterplot <- ggplot(data = msleep, 
+                      aes(x = bodywt, 
+                          y = sleep_total)) + 
+  geom_point()
+
+# scatterplot <- ggplot(data = msleep, aes(x = bodywt, y = sleep_total)) + geom_point()
+
+scatterplot
+```
+
+Now we can change the colors of the points based on what trophic level each animal is. You set the "col" parameter:
+
+```{r}
+scatterplot <- ggplot(data = msleep, 
+                      aes(x = bodywt, 
+                          y = sleep_total, 
+                          col = vore)) +
+  geom_point()
+
+scatterplot
+```
+
+Now, we know the relationship is not linear. However, we still want to look at variation within the species by bodyweight. We should take the log of the `bodywt` variable.
+
+```{r}
+scatterplot <- ggplot(data = msleep, 
+                      aes(x = log(bodywt), 
+                          y = sleep_total,
+                          col = vore)) + 
+  geom_point()
+
+scatterplot
+```
+
+Lastly, let's perform some cosmetic commands to make the graph look as good as possible:
+
+```{r}
+scatterplot <- scatterplot + 
+  geom_point(size = 5) + 
+  xlab("Log Body Weight") +
+  ylab("Total Hours Sleep") + 
+  ggtitle("Sleep Data: Hours of Sleep vs Body Weight") +
+  scale_colour_brewer(palette = "Set1") +
+  scale_x_continuous(breaks = seq(-5, 10, 2)) + 
+  theme_bw()
+
+scatterplot
+```
+
+Here are some other color palettes to be used with commands like `scale_colour_brewer(palette = "Set1")`
+```{r}
+library(RColorBrewer)
+display.brewer.all(type = "qual")
+```
+
+
+Next, let's draw some linear regression lines. The `geom_smooth()` command here draws a linear regression line for each category separated. We will talk about linear regression next week:
+
+```{r}
+scatter_lm <- scatterplot + 
+  geom_smooth(method = 'lm', 
+              se = FALSE)
+
+scatter_lm
+```
+
+Feel free to go through and run each individual `+` to understand what each portion of the plot is doing. You can also play around with the graphs to make them to your liking. I am not expecting beautiful and perfect graphs, but at the very least, your groups should be outputting simplistic and accurate graphs (and make sure to change the x-axis, y-axis, and graph title names).
+
+Let's move onto another dataset. This time, we will be using the `mtcars` dataset. Try this example on your own!
+
+Try to create a nice-looking scatterplot with Horsepower (`hp`) on the x-axis, Quarter Mile Time (`qsec`) on the y-axis, and a linear regression line illustrating the correlation.
+
+```{r}
+
+#Work in groups. Type your code here
+
+```
+
+A graph such as this one above would be perfectly adequate in your final paper.
+
+# Histograms
+
+First, we need to create our dataframe. I downloaded this .txt file from the internet, and now we need to do some coding gymnastics to make the data ready to be coded.
+
+```{r}
+festival_data <- read.csv(url("https://www.dropbox.com/s/73gr4v0llal20ro/festival.data.csv?dl=1")) %>% 
+  select(-1)
+```
+
+Now that we are done cleaning up the data, let's create a histogram of Day 1 Hygiene:
+
+```{r}
+day1_histogram <- ggplot(festival_data, 
+                        aes(x = day1)) + 
+  geom_histogram()
+
+day1_histogram
+```
+
+This looks pretty dreary. Let's clean it up by changing the Bin Width (the size of each bin), color, labels, and title of the graph:
+
+```{r}
+day1_histogram <- day1_histogram +
+  geom_histogram(binwidth = 0.3, 
+                 color = "black", 
+                 fill="yellow") + 
+  labs(x = "Score", 
+       y = "Counts") +
+  ggtitle("Hygiene at Day 1") + 
+  theme_bw()
+
+day1_histogram
+```
+
+Much better.
+
+I doubt we will need to do much more trickery with the histogram plots, but just in case, here is some code that will allow you to put multiple plots on one page:
+
+```{r}
+library(reshape2)
+
+festival_data_stack <- melt(festival_data, 
+                            id = c("ticknumb","gender"))
+
+colnames(festival_data_stack)[3:4] <- c("day", "score")
+
+histogram_3days <- ggplot(festival_data_stack,
+                          aes(score)) +
+  geom_histogram(binwidth = 0.4, 
+                 color = "black", 
+                 fill = "yellow") +
+  labs(x = "Score", y = "Counts") + 
+  facet_grid(gender ~ day) + 
+  theme_bw()
+
+histogram_3days
+```
+
+This fancier plot lets you compare across gender and days to see how the hygiene compared across covariates.
+
+# Boxplots
+
+Let's draw boxplots with this data.
+
+```{r}
+boxplot <- ggplot(festival_data_stack, 
+                  aes(x = gender,
+                      y = score)) +
+  geom_boxplot() + 
+  facet_grid(~day) + 
+  theme_bw()
+
+boxplot
+```
+
+Pretty good, but if you want to add color or change the descriptive variable names:
+
+```{r}
+boxplot <- ggplot(festival_data_stack,
+                  aes(x = gender, 
+                      y = score, 
+                      fill = gender)) +
+  geom_boxplot() + 
+  stat_boxplot(geom = "errorbar") +
+  facet_grid(~day) + 
+  xlab("Gender") + 
+  ylab("Score")
+
+boxplot
+```
+
+# Bar Charts
+
+Last, but certainly not least, is the Bar Charts. I do not feel I need to explain much in the coding here as we have made clear that simplistic graphs are for the best. However, I would feel I wronged you all if I did not provide the code that can transform these simplistic bar charts.
+
+```{r}
+festival_data_stack2 <- na.omit(festival_data_stack)
+
+score_sem <- ddply(festival_data_stack2, 
+                   c("gender", "day"),
+                   summarise, 
+                   mean = mean(score),
+                   sem = sd(score)/sqrt(length(score)))
+
+score_sem
+
+festival_bar <- ggplot(score_sem, 
+                       aes(day, mean, 
+                           fill = gender)) +
+  geom_bar(stat = "identity")
+
+festival_bar
+```
+
+Not great. It would be much better if we could compare the heights of bars directly. You would do so like this:
+
+```{r}
+festival_bar <- ggplot(score_sem, 
+                       aes(x = day, 
+                           y = mean, 
+                           fill = gender)) +
+  geom_col(position = "dodge", 
+           colour = "black")
+
+festival_bar
+```
+
+Last, let's add some error terms:
+
+```{r}
+festival_bar <- ggplot(score_sem, 
+                       aes(x = day, 
+                           y = mean, 
+                           fill = gender)) +
+  geom_col(position = "dodge", 
+           colour = "black", 
+           stat = "identity") +
+  geom_errorbar(aes(ymin = mean - sem, 
+                    ymax = mean + sem), 
+                position = "dodge") +
+  xlab("Day") + 
+  ylab("Mean of Hygiene") +
+  ggtitle("Gender Comparison of Hygiene at Festival") + 
+  theme_bw()
+
+festival_bar
+```
+
+# Save a Graph
+
+To save a graph as a .png file (THIS IS IMPORTANT SINCE MOST OF YOU WILL WRITE YOUR FINAL PAPER IN A WORD DOCUMENT), use the `ggsave` function. Simply put the plot's object name into the `ggsave` function, and it will save the .png file to the file destination on your laptop that the R Markdown file is being saved to. You can see an example below:
+
+```{r, eval = FALSE}
+scatterplot_saved <- ggsave(scatterplot, file = "scatterplot.png")
+
+scatterplot2_saved <- ggsave(scatterplot2, file = "scatterplot2.png")
+```
+
+# Stargazer
+
+Now, let's make a Big Ugly Table of Numbers (BUTON) by using the `stargazer` package, which will automatically tell us if our data is statistically significant to the `p < 0.05`.
+
+The first thing you need to do to make the `stargazer` package work is download LaTex. This will help you knit your documents to PDF and output pretty tables and graphs. Please go to the website https://www.latex-project.org/get/ to download your LaTex file for your computer.
+
+The `stargazer` package is tricky first of all because you *must* put `results = 'asis'` in the `{r}` area at the top of the code chunk. Additionally, you must also knit the document into PDF in order to output a `stargazer` table.
+
+As an example:
+
+```{r, results='asis'}
+stargazer(attitude, 
+          type = 'latex',
+          title = "Summary Statistics",
+          no.space = TRUE)
+```
+
+This first stargazer table just outputs summary statistics. Let's output a stargazer table of a linear regression model:
+
+```{r, results='asis'}
+lm_function <- lm(hp ~ qsec + mpg + cyl + drat + wt, 
+                  data = mtcars)
+
+stargazer(lm_function, 
+          type = 'latex',
+          title = "OLS Results",
+          omit.stat = c("LL", "ser", "f"), 
+          no.space = TRUE)
+
+regression <- stargazer(lm_function,
+                        type = 'latex',
+                        title = "OLS Results",
+                        omit.stat = c("LL", "ser", "f"),
+                        no.space = TRUE)
+```
+
+
+
+
